@@ -2,16 +2,30 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/bytecodealliance/wasmtime-go"
 )
 
-func add(a, b int32) int32 {
-	fmt.Println("Add from Go Wasmtime!")
-	fmt.Printf("a: %d, b: %d\n", a, b)
-	return a + b
-}
+func write(vote string) {
+	// Open the file for writing, create it if it doesn't exist
+	file, err := os.Create("output.txt")
+	if err != nil {
+		fmt.Println("Error creating file:", err)
+		return
+	}
+	defer file.Close()
 
+	// Write a value to the file
+	_, err = file.WriteString(vote)
+	if err != nil {
+		fmt.Println("Error writing to file:", err)
+		return
+	}
+
+	fmt.Println("Value written to file successfully.")
+
+}
 func main() {
 	// Create an engine and store
 	engine := wasmtime.NewEngine()
@@ -26,8 +40,10 @@ func main() {
 		panic(err)
 	}
 
+	// Define the vote function and link it to the VotingSystem's Vote method
+
 	linker := wasmtime.NewLinker(store.Engine)
-	linker.DefineFunc(store, "env", "add", add)
+	linker.DefineFunc(store, "env", "write", write)
 
 	instance, err := linker.Instantiate(store, module)
 
@@ -36,9 +52,15 @@ func main() {
 		panic(err)
 	}
 
-	addAndMultiply := instance.GetExport(store, "add_and_multiply")
+	voteRed := instance.GetExport(store, "vote_red")
+	voteBlue := instance.GetExport(store, "vote_blue")
 
-	// Call the "add_and_multiply" function from Rust
-	result, _ := addAndMultiply.Func().Call(store, 2, 3)
-	fmt.Println("Result:", result.(int32))
+	// Simulate voting process
+	voteRed.Func().Call(store)
+	voteRed.Func().Call(store)
+	voteBlue.Func().Call(store)
+	voteRed.Func().Call(store)
+
+	// Get voting results
+
 }
