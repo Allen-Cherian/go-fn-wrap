@@ -1,4 +1,5 @@
-use std::sync::{Mutex, Once};
+use std::{sync::{Mutex, Once}, u8};
+use wasm_bindgen::prelude::*;
 
 struct VoteCount {
     red: u32,
@@ -24,7 +25,13 @@ pub extern "C" fn vote_red() {
     if vote_count.red + vote_count.blue < 11 {
         vote_count.red += 1;
         println!("Voted for red");
-        unsafe{write("red".to_owned())};
+        let vote = "Red";
+        let input_bytes = vote.as_bytes();
+        let input_ptr = input_bytes.as_ptr();
+        let input_len = input_bytes.len();
+        // let integer_value: i32 = vote.parse().unwrap();
+        // println!("{}",integer_value);
+       {unsafe { write(input_ptr,input_len) }};
     } else {
         println!("Voting limit reached");
     }
@@ -37,7 +44,13 @@ pub extern "C" fn vote_blue() {
     if vote_count.red + vote_count.blue < 11 {
         vote_count.blue += 1;
         println!("Voted for blue");
-        unsafe{write("blue".to_owned())};
+        let vote = "blue";
+        let input_bytes = vote.as_bytes();
+        let input_ptr = input_bytes.as_ptr();
+        let input_len = input_bytes.len();
+        // let integer_value: i32 = vote.parse().unwrap();
+        // println!("{}",integer_value);
+       {unsafe{write(input_ptr,input_len)}};
     } else {
         println!("Voting limit reached");
     }
@@ -50,7 +63,7 @@ pub extern "C" fn get_vote_counts() -> (u32, u32) {
     (vote_count.red, vote_count.blue)
 }
 
-
+#[wasm_bindgen]
 extern "C" {
-    fn write(candidate: String);
+    fn write(input_ptr: *const u8, input_len: usize);
 }
